@@ -20,7 +20,7 @@ const LanguageSelector = ({ language, onSelect }) => {
       </Text>
       <Menu isLazy>
         <MenuButton as={Button}>{language}</MenuButton>
-        <MenuList bg="#b6b3bd">
+        <MenuList bg="#b6b3bd" borderColor="black" border="5px solid">
           {languages.map(([lang, version]) => (
             <MenuItem
               key={lang}

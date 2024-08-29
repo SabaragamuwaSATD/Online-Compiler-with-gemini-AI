@@ -75,6 +75,7 @@ const Output = ({ editorRef, language }) => {
           border="5px solid"
           borderRadius="md"
           borderColor={isError ? "red.500" : "purple.200"}
+          overflowY="auto"
         >
           {output
             ? output.map((line, i) => <Text key={i}>{line}</Text>)
@@ -89,6 +90,7 @@ const Output = ({ editorRef, language }) => {
           borderRadius="md"
           borderColor="red.500"
           overflow="hidden"
+          overflowY="auto"
         >
           <Text color="red.500">Error Explanation:</Text>
           <Text color="red.500">
