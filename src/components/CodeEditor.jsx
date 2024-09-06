@@ -1,6 +1,20 @@
 import { useRef, useState } from "react";
-import { Box, HStack, VStack, Text } from "@chakra-ui/react";
-import { Button, Grid } from "@chakra-ui/react";
+import {
+  Box,
+  HStack,
+  VStack,
+  Text,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Input,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { Editor } from "@monaco-editor/react";
 import LanguageSelector from "./LanguageSelector";
 import { CODE_SNIPPETS } from "../constants";
@@ -11,6 +25,7 @@ import {
   saveCodeSnippets,
   getAllCodeSnippets,
   deleteCodeSnippet,
+  updateCodeSnippet,
 } from "../apiBackend";
 
 const CodeEditor = () => {
@@ -22,6 +37,10 @@ const CodeEditor = () => {
   const [allCodeSnippets, setAllCodeSnippets] = useState([]);
   const [showCodeSnippets, setShowCodeSnippets] = useState([false]);
   const [showDebuggingConsole, setShowDebuggingConsole] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [title, setTitle] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [currentSnippet, setCurrentSnippet] = useState(null);
 
   const onMount = (editor) => {
     editorRef.current = editor;
@@ -96,15 +115,23 @@ const CodeEditor = () => {
     if (editorRef.current) {
       const code = editorRef.current.getValue();
       try {
-        const response = await saveCodeSnippets({
-          code: code,
-          language: language,
-        });
-
-        if (response.status === 201) {
-          alert("Code saved successfully!");
+        if (isUpdating && currentSnippet) {
+          const response = await updateCodeSnippet(currentSnippet._id, {
+            title: title,
+            code: code,
+            language: language,
+          });
         } else {
-          alert("Failed to save code.");
+          const response = await saveCodeSnippets({
+            title: title,
+            code: code,
+            language: language,
+          });
+          if (response.status === 201) {
+            alert("Code saved successfully!");
+          } else {
+            alert("Failed to save code.");
+          }
         }
       } catch (error) {
         if (error.response) {
@@ -115,6 +142,20 @@ const CodeEditor = () => {
         alert("Error saving code.");
       }
     }
+    onClose();
+  };
+
+  // Function to load code snippet for updating
+  const handleUpdateCodeSnippet = (snippet) => {
+    setCurrentSnippet(snippet);
+    setTitle(snippet.title);
+    setValue(snippet.code);
+    setLanguage(snippet.language);
+    setIsUpdating(true);
+  };
+
+  const handleShowUpdateModal = () => {
+    onOpen(); // Now open the modal to enter/update the title
   };
 
   const handleRetrieveCodeSnippets = async () => {
@@ -173,7 +214,7 @@ const CodeEditor = () => {
         >
           Debug
         </Button>
-        <Button onClick={handleSaveCode} style={{ marginRight: "10px" }}>
+        <Button onClick={handleShowUpdateModal} style={{ marginRight: "10px" }}>
           Save Code
         </Button>
         <Button
@@ -228,6 +269,9 @@ const CodeEditor = () => {
             <VStack spacing={4} align="left">
               {allCodeSnippets.map((snippet, index) => (
                 <Box key={index} p={4} bg="gray-700" borderRadius="md">
+                  <Text fontSize="lg" fontWeight="bold">
+                    Title: {snippet.title}
+                  </Text>
                   <Text fontWeight="bold"> Language : {snippet.language}</Text>
                   <Text>{snippet.code}</Text>
                   <Text fontSize="sm" color="gray-400">
@@ -239,7 +283,12 @@ const CodeEditor = () => {
                   >
                     Delete
                   </Button>
-                  <Button style={{ margin: "10px" }}>Update</Button>
+                  <Button
+                    onClick={() => handleUpdateCodeSnippet(snippet)}
+                    style={{ margin: "10px" }}
+                  >
+                    Update
+                  </Button>
                 </Box>
               ))}
             </VStack>
@@ -252,6 +301,33 @@ const CodeEditor = () => {
           />
         )}
       </HStack>
+
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {isUpdating
+              ? "Update your code snippet"
+              : "Enter a Title for Your Code Snippet"}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Input
+              placeholder="Enter title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={handleSaveCode}>
+              {isUpdating ? "Update Code" : "Save Code"}
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
