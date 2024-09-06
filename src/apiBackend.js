@@ -19,5 +19,5 @@ export const updateCodeSnippet = (id, data) => {
 };
 
 export const deleteCodeSnippet = (id) => {
-  return axios.post(`${VITE_API_BASE_URL}/codes/${id}`);
+  return axios.delete(`${VITE_API_BASE_URL}/codes/${id}`);
 };

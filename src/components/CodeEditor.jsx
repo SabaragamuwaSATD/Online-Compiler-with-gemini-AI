@@ -7,7 +7,11 @@ import { CODE_SNIPPETS } from "../constants";
 import Output from "./Output";
 import DebugConsole from "./DebugConsole";
 import Debugger from "./Debugger";
-import { saveCodeSnippets, getAllCodeSnippets } from "../apiBackend";
+import {
+  saveCodeSnippets,
+  getAllCodeSnippets,
+  deleteCodeSnippet,
+} from "../apiBackend";
 
 const CodeEditor = () => {
   const editorRef = useRef();
@@ -124,6 +128,23 @@ const CodeEditor = () => {
     }
   };
 
+  const handleDeleteCodeSnippet = async (id) => {
+    try {
+      const response = await deleteCodeSnippet(id);
+      if (response.status === 200) {
+        alert("Code snippet deleted successfully!");
+        setAllCodeSnippets((prevSnippets) =>
+          prevSnippets.filter((snippet) => snippet.id !== id)
+        );
+      } else {
+        alert("Failed to delete code snippet.");
+      }
+    } catch (error) {
+      console.error("Error deleting code snippet:", error);
+      alert("Error deleting code snippet.");
+    }
+  };
+
   const handleBackToOutput = () => {
     setShowCodeSnippets(false);
     setShowDebuggingConsole(false);
@@ -161,10 +182,7 @@ const CodeEditor = () => {
         >
           Saved Codes
         </Button>
-        {showCodeSnippets ||
-          (showDebuggingConsole && (
-            <Button onClick={handleBackToOutput}>Output</Button>
-          ))}
+        <Button onClick={handleBackToOutput}>Output</Button>
       </Box>
       <br />
       <HStack spacing={4}>
@@ -215,6 +233,13 @@ const CodeEditor = () => {
                   <Text fontSize="sm" color="gray-400">
                     Created At : {new Date(snippet.createdAt).toLocaleString()}
                   </Text>
+                  <Button
+                    onClick={() => handleDeleteCodeSnippet(snippet._id)}
+                    style={{ margin: "10px" }}
+                  >
+                    Delete
+                  </Button>
+                  <Button style={{ margin: "10px" }}>Update</Button>
                 </Box>
               ))}
             </VStack>
